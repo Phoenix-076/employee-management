@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}{{ view.object|default_if_none:"New Employee" }}{% endblock %}
+{% block content %}
+<section class="card form-shell">
+    <header class="card-header">
+        <div>
+            <p class="eyebrow">Employee</p>
+            <h1>{% if view.object %}Edit{% else %}Create{% endif %} Employee</h1>
+        </div>
+        <a class="button ghost" href="{% url 'employee_list' %}">Back</a>
+    </header>
+
+    <form method="post" class="styled-form" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-sections">
+            <div class="form-section">
+                <div class="section-title">Personal</div>
+                <div class="form-grid">
+                    {% for field in form %}
+                        {% if field.name == "first_name" or field.name == "last_name" or field.name == "email" or field.name == "profile_image" %}
+                            {% if field.field.widget.input_type == "checkbox" %}
+                                <label class="checkbox-line">
+                                    {{ field }}
+                                    <span>{{ field.label }}</span>
+                                    {% if field.errors %}
+                                        <small class="error">{{ field.errors|striptags }}</small>
+                                    {% endif %}
+                                </label>
+                            {% else %}
+                                <label class="form-field">
+                                    <span>{{ field.label }}</span>
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <small class="help">{{ field.help_text }}</small>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <small class="error">{{ field.errors|striptags }}</small>
+                                    {% else %}
+                                         <small class="error inline-error" data-error-for="{{ field.id_for_label }}"></small>
+                                    {% endif %}
+                                </label>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">Role & Status</div>
+                <div class="form-grid">
+                    {% for field in form %}
+                        {% if field.name != "first_name" and field.name != "last_name" and field.name != "email" and field.name != "profile_image" %}
+                            {% if field.field.widget.input_type == "checkbox" %}
+                                <label class="checkbox-line">
+                                    {{ field }}
+                                    <span>{{ field.label }}</span>
+                                    {% if field.errors %}
+                                        <small class="error">{{ field.errors|striptags }}</small>
+                                    {% endif %}
+                                </label>
+                            {% else %}
+                                <label class="form-field">
+                                    <span>{{ field.label }}</span>
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <small class="help">{{ field.help_text }}</small>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <small class="error">{{ field.errors|striptags }}</small>
+                                    {% else %}
+                                         <small class="error inline-error" data-error-for="{{ field.id_for_label }}"></small>
+                                    {% endif %}
+                                </label>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit">
+                {% if view.object %}Save Changes{% else %}Create Employee{% endif %}
+            </button>
+        </div>
+    </form>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('.styled-form');
+  if (!form) return;
+
+  const inputs = form.querySelectorAll('input, select');
+
+  function clearError(input) {
+    input.classList.remove('input-error');
+    const err = form.querySelector(`[data-error-for="${input.id}"]`);
+    if (err) err.textContent = '';
+  }
+
+  function setError(input, message) {
+    input.classList.add('input-error');
+    const err = form.querySelector(`[data-error-for="${input.id}"]`);
+    if (err) err.textContent = message;
+  }
+
+  inputs.forEach(input => {
+    input.addEventListener('input', () => clearError(input));
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    let hasError = false;
+    inputs.forEach(input => {
+      if (input.type === 'checkbox') {
+        return;
+      }
+      clearError(input);
+      const value = input.value.trim();
+      input.value = value; // persist trimmed value
+      if (!value) {
+        setError(input, 'This field is required.');
+        hasError = true;
+        return;
+      }
+      if (input.type === 'email') {
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        const validEmail = emailPattern.test(value);
+        if (!validEmail) {
+          setError(input, 'Enter a valid email.');
+          hasError = true;
+        }
+      }
+      if (input.name === 'salary') {
+        const n = Number(value);
+        if (Number.isNaN(n) || n < 0) {
+          setError(input, 'Enter a valid salary.');
+          hasError = true;
+        }
+      }
+    });
+
+    if (hasError) {
+      return;
+    }
+
+    Swal.fire({
+      title: '{% if view.object %}Save changes?{% else %}Create employee?{% endif %}',
+      text: '{% if view.object %}Confirm updating this employee.{% else %}Confirm adding this employee.{% endif %}',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, continue',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#ef4444',
+      background: '#ffffff',
+      color: '#0f172a'
+    }).then(result => {
+      if (result.isConfirmed) {
+        form.submit();
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

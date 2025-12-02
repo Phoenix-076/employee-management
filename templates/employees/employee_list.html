@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Employees{% endblock %}
+{% block content %}
+<section class="card employees-card">
+    <header class="card-header">
+        <div>
+            <p class="eyebrow">Welcome, {{ user.get_username }}</p>
+            <h1>Employees</h1>
+        </div>
+        <a class="button" href="{% url 'employee_add' %}">Add Employee</a>
+    </header>
+
+    {% if employees %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Department</th>
+                        <th>Position</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for employee in employees %}
+                    <tr class="employee-row"
+                        data-name="{{ employee.first_name }} {{ employee.last_name }}"
+                        data-email="{{ employee.email }}"
+                        data-department="{{ employee.department }}"
+                        data-position="{{ employee.position }}"
+                        data-status="{{ employee.is_active|yesno:'Active,Inactive' }}"
+                        data-date="{{ employee.date_joined }}"
+                        data-salary="{{ employee.salary }}"
+                        data-image="{{ employee.profile_image|default:'https://placehold.co/360x360?text=Profile' }}"
+                        data-delete-url="{% url 'employee_delete' employee.pk %}">
+                        <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+                        <td>{{ employee.email }}</td>
+                        <td>{{ employee.department }}</td>
+                        <td>{{ employee.position }}</td>
+                        <td>
+                            {% if employee.is_active %}
+                                <span class="badge success">Active</span>
+                            {% else %}
+                                <span class="badge muted">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="row-actions">
+                            <a class="button ghost small open-edit" href="{% url 'employee_edit' employee.pk %}">Edit</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                {% endif %}
+                <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <div>
+                <h2>No employees yet</h2>
+                <p class="muted">Create the first one to get started.</p>
+                <a href="{% url 'employee_add' %}">Create employee</a>
+            </div>
+        </div>
+    {% endif %}
+</section>
+
+<div class="modal-overlay" id="employeeModal" aria-hidden="true">
+    <div class="modal-card">
+        <header class="modal-header">
+            <div>
+                <p class="eyebrow">Employee</p>
+                <h2 id="modalName">Name</h2>
+            </div>
+            <button class="icon-btn ghost close-modal" aria-label="Close">&times;</button>
+        </header>
+        <div class="modal-body">
+            <div class="modal-image-wrap">
+                <img id="modalImage" src="https://placehold.co/360x360?text=Profile" alt="Profile image">
+            </div>
+            <div class="modal-details">
+                <p><strong>Email:</strong> <span id="modalEmail"></span></p>
+                <p><strong>Department:</strong> <span id="modalDepartment"></span></p>
+                <p><strong>Position:</strong> <span id="modalPosition"></span></p>
+                <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+                <p><strong>Date Joined:</strong> <span id="modalDate"></span></p>
+                <p><strong>Salary:</strong> <span id="modalSalary"></span></p>
+            </div>
+        </div>
+        <footer class="modal-footer">
+            <form method="post" id="modalDeleteForm" class="inline-delete-form">
+                {% csrf_token %}
+                <button type="submit" class="button danger">Delete</button>
+            </form>
+            <button class="button ghost close-modal" type="button">Close</button>
+        </footer>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const overlay = document.getElementById('employeeModal');
+    const nameEl = document.getElementById('modalName');
+    const emailEl = document.getElementById('modalEmail');
+    const deptEl = document.getElementById('modalDepartment');
+    const posEl = document.getElementById('modalPosition');
+    const statusEl = document.getElementById('modalStatus');
+    const dateEl = document.getElementById('modalDate');
+    const salaryEl = document.getElementById('modalSalary');
+    const imgEl = document.getElementById('modalImage');
+    const deleteForm = document.getElementById('modalDeleteForm');
+    const placeholderImg = 'https://placehold.co/360x360?text=Profile';
+
+    function openModal(row) {
+        nameEl.textContent = row.dataset.name;
+        emailEl.textContent = row.dataset.email;
+        deptEl.textContent = row.dataset.department;
+        posEl.textContent = row.dataset.position;
+        statusEl.textContent = row.dataset.status;
+        dateEl.textContent = row.dataset.date;
+        salaryEl.textContent = row.dataset.salary;
+        imgEl.src = row.dataset.image || placeholderImg;
+        deleteForm.setAttribute('action', row.dataset.deleteUrl);
+        overlay.classList.add('open');
+        overlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeModal() {
+        overlay.classList.remove('open');
+        overlay.setAttribute('aria-hidden', 'true');
+    }
+
+    document.querySelectorAll('.employee-row').forEach(row => {
+        row.addEventListener('click', (e) => {
+            if (e.target.closest('.open-edit')) return;
+            openModal(row);
+        });
+    });
+
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            closeModal();
+        }
+    });
+    overlay.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', closeModal);
+    });
+});
+</script>
+{% endblock %}

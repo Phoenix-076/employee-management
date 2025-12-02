@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block topbar %}{% endblock %}
+{% block content %}
+<section class="login-shell">
+    <div class="login-hero">
+        <p class="eyebrow">Employee Management</p>
+        <h1>Welcome back</h1>
+        <p class="muted">Sign in to access the employee directory, add new team members, and keep records up to date.</p>
+    </div>
+    <div class="login-panel">
+        <h2>Sign in</h2>
+        <form method="post" class="login-form" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+                <label class="login-field">
+                    <span>{{ field.label }}</span>
+                    {% if field.name == "password" %}
+                    <div class="input-wrap">
+                        <span class="field-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M17 11V8A5 5 0 0 0 7 8v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/>
+                            </svg>
+                        </span>
+                        {{ field }}
+                        <button type="button" class="eye-toggle" aria-label="Toggle password visibility">
+                            <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                <path d="M10.73 5.08A9.84 9.84 0 0 1 12 5c6.5 0 10 6 10 6a17.46 17.46 0 0 1-2.32 3.05" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M6.61 6.63A10.75 10.75 0 0 0 2 11s3.5 6 10 6c1.36 0 2.57-.22 3.63-.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M9.5 9.5a3 3 0 0 1 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    {% elif field.name == "username" %}
+                    <div class="input-wrap">
+                        <span class="field-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.6"/>
+                                <path d="M5 20c1.5-2.5 4.5-4 7-4s5.5 1.5 7 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                        {{ field }}
+                    </div>
+                    {% else %}
+                        {{ field }}
+                    {% endif %}
+                    {% if field.errors %}
+                        <small class="error">{{ field.errors|striptags }}</small>
+                    {% else %}
+                        <small class="error inline-error" data-error-for="{{ field.id_for_label }}"></small>
+                    {% endif %}
+                </label>
+            {% endfor %}
+            <button type="submit">Continue</button>
+            <div class="login-links">
+                <a href="#" class="muted">Create account</a>
+                <a href="#" class="muted">Forgot password?</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% if form.non_field_errors %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  Swal.fire({
+    icon: 'error',
+    title: 'Login failed',
+    text: "{{ form.non_field_errors|join:' '|escapejs }}",
+    confirmButtonColor: '#ef4444',
+    background: '#0a0a0a',
+    color: '#f5f5f5'
+  });
+});
+</script>
+{% endif %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('.login-form');
+  if (!form) return;
+
+  const passwordInput = form.querySelector('input[type="password"]');
+  const eyeBtn = form.querySelector('.eye-toggle');
+  if (passwordInput && eyeBtn) {
+    eyeBtn.addEventListener('click', () => {
+      const isHidden = passwordInput.type === 'password';
+      passwordInput.type = isHidden ? 'text' : 'password';
+      eyeBtn.querySelector('.eye-open').style.display = isHidden ? 'none' : 'inline';
+      eyeBtn.querySelector('.eye-closed').style.display = isHidden ? 'inline' : 'none';
+    });
+  }
+
+  form.addEventListener('submit', (e) => {
+    let hasError = false;
+    const inputs = form.querySelectorAll('input');
+    inputs.forEach(input => {
+      const errorEl = form.querySelector(`[data-error-for="${input.id}"]`);
+      input.classList.remove('input-error');
+      if (errorEl) errorEl.textContent = '';
+
+      if (!input.value.trim()) {
+        hasError = true;
+        input.classList.add('input-error');
+        if (errorEl) errorEl.textContent = 'This field is required.';
+      }
+    });
+    if (hasError) {
+      e.preventDefault();
+    }
+  });
+});
+</script>
+{% endblock %}

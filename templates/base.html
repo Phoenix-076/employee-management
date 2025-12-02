@@ -1,0 +1,119 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Employee Management{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    {% block topbar %}
+    <header class="topbar">
+        <div class="brand">Employee Manager</div>
+        <nav class="nav">
+            {% if user.is_authenticated %}
+                <form action="{% url 'logout' %}" method="post" class="logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="linkish icon-button">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 17l5-5-5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M20 12H9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                        </svg>
+                        Logout
+                    </button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+            {% endif %}
+        </nav>
+    </header>
+    {% endblock %}
+
+    <main class="page">
+        {% block content %}{% endblock %}
+    </main>
+    {% if messages %}
+    <script id="flash-messages" type="application/json">
+    [
+    {% for message in messages %}
+      {"level":"{{ message.tags|default_if_none:'info' }}","title":"{{ message.tags|default_if_none:'Info'|title }}","text":"{{ message|escapejs }}"}{% if not forloop.last %},{% endif %}
+    {% endfor %}
+    ]
+    </script>
+    {% endif %}
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const flashEl = document.getElementById('flash-messages');
+        if (flashEl) {
+          try {
+            const flash = JSON.parse(flashEl.textContent || "[]");
+            flash.forEach(msg => {
+              const iconMap = {success: 'success', error: 'error', warning: 'warning', info: 'info'};
+              const icon = iconMap[msg.level] || 'info';
+              Swal.fire({
+                icon,
+                title: msg.title || 'Info',
+                text: msg.text || '',
+                confirmButtonColor: '#ef4444',
+                background: '#ffffff',
+                color: '#0f172a',
+                timer: 1000,
+                showConfirmButton: false,
+                timerProgressBar: true
+              });
+            });
+          } catch (err) {
+            console.error('Failed to parse flash messages', err);
+          }
+        }
+
+        // Logout confirmation
+        document.querySelectorAll('.logout-form').forEach(form => {
+          form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            Swal.fire({
+              title: 'Logout?',
+              text: 'Are you sure you want to logout?',
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonText: 'Yes, logout',
+              cancelButtonText: 'Cancel',
+              confirmButtonColor: '#ef4444',
+              background: '#ffffff',
+              color: '#0f172a'
+            }).then(result => {
+              if (result.isConfirmed) {
+                form.submit();
+              }
+            });
+          });
+        });
+
+        // Inline delete confirmation on list
+        document.querySelectorAll('.inline-delete-form').forEach(form => {
+          form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            Swal.fire({
+              title: 'Delete employee?',
+              text: 'This action cannot be undone.',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Delete',
+              cancelButtonText: 'Cancel',
+              confirmButtonColor: '#ef4444',
+              background: '#ffffff',
+              color: '#0f172a'
+            }).then(result => {
+              if (result.isConfirmed) {
+                form.submit();
+              }
+            });
+          });
+        });
+      });
+    </script>
+</body>
+</html>
