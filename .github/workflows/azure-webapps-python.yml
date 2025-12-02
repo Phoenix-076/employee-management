@@ -1,7 +1,7 @@
 name: Build and Deploy Python App to Azure Web App
 
 env:
-  AZURE_WEBAPP_NAME: employee-management   # <-- CHANGE THIS
+  AZURE_WEBAPP_NAME: employee-management   # <-- change this
   PYTHON_VERSION: '3.12.6'
 
 on:
@@ -55,15 +55,8 @@ jobs:
           name: python-app
           path: .
 
-      # 🔐 Login using Publish Profile (required)
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-
-      # 🚀 Deploy to Azure Web App
       - name: Deploy to Azure Web App
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
