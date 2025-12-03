@@ -55,4 +55,8 @@ class EmployeeDeleteView(LoginRequiredMixin, DeleteView):
         messages.success(request, "Employee deleted.")
         return super().delete(request, *args, **kwargs)
 
+    def get_success_url(self):
+        # Always return the list URL with deleted flag to trigger SweetAlert
+        return f"{reverse_lazy('employee_list')}?deleted=1"
+
 # Create your views here.

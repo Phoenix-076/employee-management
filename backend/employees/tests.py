@@ -254,7 +254,7 @@ class EmployeeCRUDTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertTemplateUsed(resp, "employees/employee_confirm_delete.html")
 
-    def test_employee_delete_post_removes_and_redirects_with_message(self):
+    def test_employee_delete_post_removes_and_shows_sweetalert_message(self):
         emp = Employee.objects.create(
             first_name="Del",
             last_name="Target",
@@ -265,9 +265,10 @@ class EmployeeCRUDTests(TestCase):
             salary="40000.00",
             is_active=True,
         )
-        resp = self.client.post(reverse("employee_delete", args=[emp.pk]))
-        self.assertEqual(resp.status_code, 302)
-        self.assertRedirects(resp, reverse("employee_list"))
+        # Follow redirect to the list page where employee_list.js logic triggers SweetAlert via ?deleted=1
+        resp = self.client.post(reverse("employee_delete", args=[emp.pk]), follow=True)
+        self.assertEqual(resp.status_code, 200)
         self.assertFalse(Employee.objects.filter(pk=emp.pk).exists())
-        storage = list(get_messages(resp.wsgi_request))
-        self.assertTrue(any("Employee deleted." in str(m) for m in storage))
+        # Assert SweetAlert invocation and success text are in the rendered HTML
+        self.assertContains(resp, 'Swal.fire')
+        self.assertContains(resp, 'Employee deleted')

@@ -157,6 +157,22 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.querySelectorAll('.close-modal').forEach(btn => {
         btn.addEventListener('click', closeModal);
     });
+
+    // Show delete success via query param
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('deleted') === '1') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Employee deleted',
+            text: 'The employee was removed successfully.',
+            confirmButtonColor: '#ef4444',
+            background: '#ffffff',
+            color: '#0f172a',
+            timer: 1200,
+            showConfirmButton: false,
+            timerProgressBar: true
+        });
+    }
 });
 </script>
 {% endblock %}
